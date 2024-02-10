@@ -12,4 +12,6 @@ ML/GOO
 /train
 /train8h
 /logs0
-.ipynb
+*.ipynb
+*.sh
+*.Forms

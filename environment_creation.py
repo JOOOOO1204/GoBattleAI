@@ -6,6 +6,13 @@ import time
 import cv2
 from mss import mss
 import pytesseract
+from time import sleep
+from win32dic import VK_CODE
+import win32api , win32con , win32gui
+# Corrected import statement
+import pyautogui
+
+import pydirectinput
 from stable_baselines3.common.env_checker import check_env
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
@@ -15,17 +22,13 @@ class GoBattle(gym.Env):
 
     def __init__(self, render_mode=None, size=5):
         self.i = 0
-        self.game_location = {'top': 210, 'left': 520, 'width': 900, 'height': 400}
-        self.done_location = {'top': 230, 'left': 700, 'width': 280, 'height': 130}
-        self.XP = {'top': 355, 'left': 930, 'width': 70, 'height': 45}
+        self.game_location = {'top': 400, 'left': 250, 'width': 110, 'height': 500}
         self.anuncement = {'top': 315, 'left': 150, 'width': 140, 'height': 25}
         self.health = {'top': 235, 'left': 105, 'width': 40, 'height': 25}
-        self.dimond = {'top': 222, 'left': 1697, 'width': 40, 'height': 40}
-        self.disconnect = {'top': 355, 'left': 735, 'width': 440, 'height': 40}
         self.Epoc = 0
         # Observations are dictionaries with the agent's and the tar8get's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
-        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 83, 100,) ,dtype=np.uint8)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1,100,200,) ,dtype=np.uint8)
         self.action_space = spaces.Discrete(7)
         self.window = None
         self.clock = None
@@ -34,17 +37,26 @@ class GoBattle(gym.Env):
         self.pun = False
 
 
-
     def reset(self, seed=None, options=None):
-        
-        # 
-        pydirectinput.keyDown('8')
-        pydirectinput.keyUp('8')
-        time.sleep(9)
+        window_title = "GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave"
+        hwnd = win32gui.FindWindow(None, window_title)
+
+        if hwnd != 0:
+            # If the window is found, bring it to the foreground
+            sleep(0.1)
+            win32gui.SetForegroundWindow(hwnd)
+        else:
+            # Handle the case where the window is not found
+            print(f"Window with title '{window_title}' not found.")
+
+        # win32gui.SetForegroundWindow("GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave")
+
+    
+        time.sleep(5)
         pydirectinput.click(x=990, y=777)
         self.reward = self.reward67
-        pydirectinput.keyDown('space')
-        pydirectinput.keyUp('space')
+       # pydirectinput.keyDown('space')
+      #  pydirectinput.keyUp('space')
         self.pun = False
         self.observation =  self.get_observation()
         self.info = {}
@@ -68,65 +80,17 @@ class GoBattle(gym.Env):
 
 
     def get_done(self):
+        color =  pyautogui.pixel(960, 920)
+        if color[0] > 200 and color[1] > 200 and color[2] > 200:
+            self.KeyClick('spacebar')
+            done = True
+            return done
 
-        template = cv2.imread("skull.png")
-        template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-        template = cv2.Canny(template, 50, 200)
-        (h, w) = template.shape[:2]
-
-        start_time = time.time()
-        mon = {'top': 230, 'left': 700, 'width': 280, 'height': 130}
-        with mss() as cap:
-            while True:
-                last_time = time.time()
-                img = cap.grab(mon)
-                img = np.array(img)
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                meth = 'cv2.TM_CCOEFF'
-                method = eval(meth) 
-                result = cv2.matchTemplate(gray, template, method)
-                (_, maxVal, _, _) = cv2.minMaxLoc(result)
-                threshold = 4500000
-
-                # Get the location of the matched area
-                loc = np.where(maxVal >= threshold)
-
-                # If a match is found
-                
-                if maxVal >= threshold:
-                    if not self.pun:
-                        self.reward67 = self.reward67-300
-                        self.pun = True
-                    else:
-                        break
-                    self.Epoc += 1
-                    pydirectinput.keyDown('7')
-                    pydirectinput.keyUp('7')
-                    # time.sleep(3)
-                    
-
-                    pydirectinput.click(x=990, y=777)
-                    pydirectinput.keyDown('space')
-                    pydirectinput.keyUp('space')
-                    
-                else:
-                    break
-                break
-
+       
     
     def step(self, action):
         pun = True
         self.reward67 = 0
-        # img = np.array(mss().grab(self.disconnect))
-        # img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
-        # img_br = cv2.addWeighted(img_bgr, 1.5, 0, 0, 0)
-        # text = pytesseract.image_to_string(img_br)[:3]
-        # if text == "You":
-        #     pydirectinput.click(955,669)
-        #     time.sleep(3)
-        #     pydirectinput.click(1660,800)
-        #     pydirectinput.click(1111,425)
-       
         self.reward = 0
         action_map = {
             0:'space',
@@ -138,49 +102,72 @@ class GoBattle(gym.Env):
             6: 'd'
         }
         if action !=2:
-            pydirectinput.press(action_map[action])
+            a = action_map[action]
+            self.KeyClick(a)
             
        
 
 
-        self.get_done() 
+        done = self.get_done()
+        if done:
+            self.terminated = True
+        else:
+            self.terminated = False
         self.observation = self.get_observation()
-        self.reward67 = self.reward67-50
         self.i += 1
         if self.i % 14 == 0:
             res ,kill = self.get_kill()
             if kill:
-                self.reward67 +=100
+                self.reward67 - self.reward67 +100
 
                 print(res)
-            else:
-                pass
-        else:
-            pass
-        with mss() as cap:
-            img = cap.grab(self.health)
-            img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
-            img_br = cv2.addWeighted(img_bgr, 1.5, 0, 0, 0)
-            hp = pytesseract.image_to_string(img_br, config="digits")
+        # with mss() as cap:
+            # img = cap.grab(self.health)
+            # img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
+            # img_br = cv2.addWeighted(img_bgr, 1.5, 0, 0, 0)
+            # hp = pytesseract.image_to_string(img_br, config="digits")
         
-        self.info = {'hp':hp
+        self.info = {
+            # 'hp':hp
             
         }
-        self.terminated = False
+        
 
         # print(f'reward [{self.reward}]')
         self.reward = self.reward67
-        print(f'done reward [{self.reward}] Epsoid [{self.Epoc}] hp {hp}')
+        print(f'done reward [{self.reward}] Epsoid [{self.Epoc}] hp')
 
         return self.observation, self.reward, self.terminated, False, self.info
     def get_observation(self):
-        with mss() as cap:
-            raw = np.array(cap.grab(self.game_location))[:,:,:3].astype(np.uint8)
-            gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
-            resized = cv2.resize(gray, (100,83))
-            channel = np.reshape(resized, (1,83,100))
-            return channel
-    
+            with mss() as sct:
+                raw = np.array(sct.grab(self.game_location))[:,:,:3].astype(np.uint8)
+                gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+                resized = cv2.resize(gray, (200,100))
+                channel = np.reshape(resized, (1,100,200))
+                return channel
+    def KeyClick(self,key):
+        try:
+            win32api.keybd_event(VK_CODE[key], 0, 0, 0)
+            time.sleep(0.1)  # You may need to adjust this delay based on your requirements
+            win32api.keybd_event(VK_CODE[key], 0, win32con.KEYEVENTF_KEYUP, 0)
+        except KeyError:
+            print(f"Key {key} not found in VK_CODE dictionary.")
+    def find_all_windows(name):
+        result = []
+        def winEnumHandler(hwnd, ctx):
+            if win32gui.IsWindowVisible(hwnd) and win32gui.GetWindowText(hwnd) == name:
+                result.append(hwnd)
+            win32gui.EnumWindows(winEnumHandler, None)
+            return result
+
+
+    def KeyHold(key):
+        try:
+            win32api.keybd_event(VK_CODE[key], 0, 0, 0)
+            time.sleep(1)  # You may need to adjust this delay based on your requirements
+            win32api.keybd_event(VK_CODE[key], 0, win32con.KEYEVENTF_KEYUP, 0)
+        except KeyError:
+            print(f"Key {key} not found in VK_CODE dictionary.")
 
 env = GoBattle()
 # It will check your custom environment and output additional warnings if needed

@@ -93,7 +93,7 @@ class GoBattle(gym.Env):
         self.reward67 = 0
         self.reward = 0
         action_map = {
-            0:'space',
+            0:'spacebar',
             1: 'v', 
             2: 'no_op',
             3: 'w',

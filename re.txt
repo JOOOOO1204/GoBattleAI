@@ -1,5 +1,7 @@
 numpy
 pydirectinput
 gymnasium
-pydirectinput
+mss
+pytesseract
+stable-baselines3
 

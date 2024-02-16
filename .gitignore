@@ -15,3 +15,7 @@ ML/GOO
 *.ipynb
 *.sh
 *.Forms
+*.zip
+*.csv
+*.0
+test.py

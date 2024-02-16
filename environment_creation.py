@@ -21,23 +21,32 @@ class GoBattle(gym.Env):
     # metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
 
     def __init__(self, render_mode=None, size=5):
+        self.state = 0
+        self.time_elapsed = 0
+        self.max_time = 10  # Time in minutes before each step
         self.i = 0
         self.game_location = {'top': 400, 'left': 250, 'width': 110, 'height': 500}
-        self.anuncement = {'top': 315, 'left': 150, 'width': 140, 'height': 25}
+        self.anuncement = {'top': 180, 'left': 170, 'width': 440, 'height': 45}
         self.health = {'top': 235, 'left': 105, 'width': 40, 'height': 25}
         self.Epoc = 0
         # Observations are dictionaries with the agent's and the tar8get's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Box(low=0, high=255, shape=(1,100,200,) ,dtype=np.uint8)
-        self.action_space = spaces.Discrete(7)
+        self.action_space = spaces.Discrete(9)
         self.window = None
         self.clock = None
         self.reward67 = 0
         self.reward = 0
         self.pun = False
+        self.terminated = False
+        self.done = False
 
 
     def reset(self, seed=None, options=None):
+        # Reset the environment to its initial state
+        self.state = 0
+        self.time_elapsed = 0
+        print("resat")
         window_title = "GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave"
         hwnd = win32gui.FindWindow(None, window_title)
 
@@ -59,7 +68,9 @@ class GoBattle(gym.Env):
       #  pydirectinput.keyUp('space')
         self.pun = False
         self.observation =  self.get_observation()
-        self.info = {}
+        self.info = {
+            'wepone' : 'string'
+        }
         
         self.reward = self.step
         
@@ -74,6 +85,8 @@ class GoBattle(gym.Env):
             KILL=False
             if res[:3] in KILL_strings:
                 KILL = True
+                print(res[:3])
+                print(res)
             else:
                 pass
             return res,KILL 
@@ -89,8 +102,11 @@ class GoBattle(gym.Env):
        
     
     def step(self, action):
-        pun = True
-        self.reward67 = 0
+
+        # k = self.get_kill()
+        # if k:
+        #     self.reward67 += 100
+        # pun = True
         self.reward = 0
         action_map = {
             0:'spacebar',
@@ -99,7 +115,9 @@ class GoBattle(gym.Env):
             3: 'w',
             4: 'a',
             5: 's',
-            6: 'd'
+            6: 'd',
+            7: 'c',
+            8: 'e'
         }
         if action !=2:
             a = action_map[action]
@@ -110,17 +128,18 @@ class GoBattle(gym.Env):
 
         done = self.get_done()
         if done:
-            self.terminated = True
-        else:
-            self.terminated = False
+            
+            self.reward -= 100
+        
         self.observation = self.get_observation()
         self.i += 1
         if self.i % 14 == 0:
             res ,kill = self.get_kill()
             if kill:
-                self.reward67 - self.reward67 +100
+                self.reward += 100
 
                 print(res)
+
         # with mss() as cap:
             # img = cap.grab(self.health)
             # img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
@@ -128,16 +147,26 @@ class GoBattle(gym.Env):
             # hp = pytesseract.image_to_string(img_br, config="digits")
         
         self.info = {
+            wepone : 'string'
             # 'hp':hp
             
         }
         
 
         # print(f'reward [{self.reward}]')
-        self.reward = self.reward67
+        
         print(f'done reward [{self.reward}] Epsoid [{self.Epoc}] hp')
+        self.state += 0.1
 
-        return self.observation, self.reward, self.terminated, False, self.info
+        # Increment time elapsed
+        self.time_elapsed += 1
+
+        # Check if 10 minutes have passed
+        if self.time_elapsed % (self.max_time * 60) == 0:
+            # Perform any specific updates or resets here
+            self.terminated = True
+
+        return self.observation, self.reward, self.terminated, False, self.info 
     def get_observation(self):
             with mss() as sct:
                 raw = np.array(sct.grab(self.game_location))[:,:,:3].astype(np.uint8)

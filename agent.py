@@ -38,15 +38,15 @@ class TrainAndLoggingCallback(BaseCallback):
         return True
 
 
-callback = TrainAndLoggingCallback(check_freq=10 wvva c 00, save_path=CHECKPOINT_DIR)
+callback = TrainAndLoggingCallback(check_freq=1000, save_path=CHECKPOINT_DIR)
 # model = DQN('CnnPolicy', env, tensorboard_log=LOG_DIR, verbose=1, buffer_size=1000, learning_starts=100,)
 # model = PPO(policy="MlpPolicy", env=env, verbose=1)
-model = PPO('CnnPolicy',env=env ,verbose=1 , ent_coef= 0.01)
+model = PPO('CnnPolicy',env=env ,verbose=1 , ent_coef= 0.001)
 model.set_logger(new_logger)
 # model.learn(100000000000000000)s
-model = PPO.load('train01/15600.zip')
+#model = PPO.load('train01/15600.zip')
 
-model.learn(total_timesteps=int(1e10), callback=callback)
+model.learn(total_timesteps=int(1e15), callback=callback)
 
 # model.learn(total_timesteps=int(1e5), callback=callback)
 

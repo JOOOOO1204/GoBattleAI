@@ -8,9 +8,10 @@ from mss import mss
 import pytesseract
 from time import sleep
 from win32dic import VK_CODE
-import win32api , win32con , win32gui
+import win32api , win32con , win32gui 
 # Corrected import statement
 import pyautogui
+# import ImageGrab
 
 import pydirectinput
 from stable_baselines3.common.env_checker import check_env
@@ -45,6 +46,7 @@ class GoBattle(gym.Env):
     def reset(self, seed=None, options=None):
         # Reset the environment to its initial state
         self.state = 0
+        self.i = 0
         self.time_elapsed = 0
         print("resat")
         window_title = "GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave"
@@ -60,17 +62,14 @@ class GoBattle(gym.Env):
 
         # win32gui.SetForegroundWindow("GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave")
 
-    
-        time.sleep(5)
-        pydirectinput.click(x=990, y=777)
-        self.reward = self.reward67
+
        # pydirectinput.keyDown('space')
       #  pydirectinput.keyUp('space')
         self.pun = False
         self.observation =  self.get_observation()
         self.info = {
-            'wepone' : 'string'
-        }
+            # 'wepone' : 'string'
+            }
         
         self.reward = self.step
         
@@ -93,11 +92,18 @@ class GoBattle(gym.Env):
 
 
     def get_done(self):
-        color =  pyautogui.pixel(960, 920)
-        if color[0] > 200 and color[1] > 200 and color[2] > 200:
+        # px = ImageGrab.grab().load()
+        x,y =  960, 920
+        hdc = win32gui.GetDC(0)
+        color = win32gui.GetPixel(hdc, x, y)
+        win32gui.ReleaseDC(0, hdc)
+        color_tuple = (color & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF)
+        if color_tuple[0] > 200 and color_tuple[1] > 200 and color_tuple[2] > 200:
             self.KeyClick('spacebar')
             done = True
             return done
+
+
 
        
     
@@ -128,17 +134,18 @@ class GoBattle(gym.Env):
 
         done = self.get_done()
         if done:
-            
-            self.reward -= 100
-        
+            self.reward -= 100        
         self.observation = self.get_observation()
         self.i += 1
-        if self.i % 14 == 0:
+        if self.i % 5 == 0:
             res ,kill = self.get_kill()
             if kill:
                 self.reward += 100
 
                 print(res)
+        if self.i >= 500:
+            self.i = 0
+            self.reset
 
         # with mss() as cap:
             # img = cap.grab(self.health)
@@ -147,7 +154,7 @@ class GoBattle(gym.Env):
             # hp = pytesseract.image_to_string(img_br, config="digits")
         
         self.info = {
-            wepone : 'string'
+            # wepone : 'string'
             # 'hp':hp
             
         }

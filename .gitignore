@@ -15,7 +15,8 @@ ML/GOO
 *.ipynb
 *.sh
 *.Forms
-*.zip
+# *.zip
 *.csv
 *.0
+/train021
 test.py

@@ -36,7 +36,6 @@ class GoBattle(gym.Env):
         self.action_space = spaces.Discrete(9)
         self.window = None
         self.clock = None
-        self.reward67 = 0
         self.reward = 0
         self.pun = False
         self.terminated = False
@@ -48,6 +47,7 @@ class GoBattle(gym.Env):
         self.state = 0
         self.i = 0
         self.time_elapsed = 0
+        self.Epoc += 1
         print("resat")
         window_title = "GoBattle.io ⚔️ Battle to be the King! 👑 Play for free the best 2D MMO game - Brave"
         hwnd = win32gui.FindWindow(None, window_title)
@@ -71,14 +71,13 @@ class GoBattle(gym.Env):
             # 'wepone' : 'string'
             }
         
-        self.reward = self.step
         
         return self.observation, self.info 
     def get_kill(self):
         with mss() as cap:
             a_cap = np.array(cap.grab(self.anuncement))
             img_bgr = cv2.cvtColor(np.array(a_cap), cv2.COLOR_BGR2GRAY)
-            img_br = cv2.addWeighted(img_bgr, 1.5, 0, 0, 0)
+            img_br = cv2.addWeighted(img_bgr, 2, 0, 0, 0)
             res = pytesseract.image_to_string(img_br)
             KILL_strings = ["You"]
             KILL=False
@@ -108,12 +107,12 @@ class GoBattle(gym.Env):
        
     
     def step(self, action):
-
-        # k = self.get_kill()
+         # k = self.get_kill()
         # if k:
         #     self.reward67 += 100
         # pun = True
         self.reward = 0
+        self.observation = self.get_observation()
         action_map = {
             0:'spacebar',
             1: 'v', 
@@ -134,25 +133,24 @@ class GoBattle(gym.Env):
 
         done = self.get_done()
         if done:
-            self.reward -= 100        
-        self.observation = self.get_observation()
+
+            self.reward -= 50
+            self.reset()     
+        
         self.i += 1
-        if self.i % 5 == 0:
+        if self.i % 7 == 0:
             res ,kill = self.get_kill()
             if kill:
-                self.reward += 100
+                self.reward += 25
 
                 print(res)
-        if self.i >= 500:
-            self.i = 0
-            self.reset
 
         # with mss() as cap:
             # img = cap.grab(self.health)
             # img_bgr = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2GRAY)
             # img_br = cv2.addWeighted(img_bgr, 1.5, 0, 0, 0)
             # hp = pytesseract.image_to_string(img_br, config="digits")
-        
+
         self.info = {
             # wepone : 'string'
             # 'hp':hp
@@ -163,16 +161,6 @@ class GoBattle(gym.Env):
         # print(f'reward [{self.reward}]')
         
         print(f'done reward [{self.reward}] Epsoid [{self.Epoc}] hp')
-        self.state += 0.1
-
-        # Increment time elapsed
-        self.time_elapsed += 1
-
-        # Check if 10 minutes have passed
-        if self.time_elapsed % (self.max_time * 60) == 0:
-            # Perform any specific updates or resets here
-            self.terminated = True
-
         return self.observation, self.reward, self.terminated, False, self.info 
     def get_observation(self):
             with mss() as sct:

@@ -1,7 +1,0 @@
-numpy
-pydirectinput
-gymnasium
-mss
-pytesseract
-stable-baselines3
-

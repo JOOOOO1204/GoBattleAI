@@ -1,0 +1,16 @@
+numpy
+pydirectinput
+gymnasium
+mss
+pytesseract
+stable-baselines3
+numpy
+dxcam
+gymnasium
+pywin32
+opencv-python
+pytesseract
+mss
+stable-baselines3
+tensorboard
+
